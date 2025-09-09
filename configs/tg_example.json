@@ -1,0 +1,22 @@
+{
+  "modules": [
+    {
+      "name": "tg",
+      "type": "TrafficGenerator",
+      "params": {
+        "mode": "RANDOM",
+        "start_addr": "0x1000",
+        "end_addr": "0x2000",
+        "num_requests": 20
+      }
+    },
+    {
+      "name": "mem",
+      "type": "MemorySim",
+      "params": {}
+    }
+  ],
+  "connections": [
+    ["tg", "mem"]
+  ]
+}

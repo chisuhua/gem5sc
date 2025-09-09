@@ -1,0 +1,29 @@
+{
+  "modules": [
+    {
+      "name": "cpu",
+      "type": "CPUSim",
+      "params": {
+        "max_inflight": 4
+      }
+    },
+    {
+      "name": "cache",
+      "type": "CacheSim",
+      "params": {
+        "buffer_size": 4
+      }
+    },
+    {
+      "name": "mem",
+      "type": "MemorySim",
+      "params": {
+        "delay": 100
+      }
+    }
+  ],
+  "connections": [
+    ["cpu", "cache"],
+    ["cache", "mem"]
+  ]
+}
