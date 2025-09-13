@@ -1,0 +1,9 @@
+{
+  "modules": [
+    { "name": "tg", "type": "StreamTrafficGenerator" },
+    { "name": "consumer", "type": "StreamConsumer" }
+  ],
+  "connections": [
+    ["tg", "consumer"]
+  ]
+}

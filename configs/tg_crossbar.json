@@ -1,0 +1,20 @@
+// configs/tg_crossbar.json
+{
+  "modules": [
+    { "name": "tg0", "type": "TrafficGenerator" },
+    { "name": "tg1", "type": "TrafficGenerator" },
+    { "name": "tg2", "type": "TrafficGenerator" },
+    { "name": "tg3", "type": "TrafficGenerator" },
+    { "name": "xbar", "type": "Crossbar" },
+    { "name": "l2_0", "type": "CacheSim" },
+    { "name": "l2_1", "type": "CacheSim" }
+  ],
+  "connections": [
+    ["tg0", "xbar"],
+    ["tg1", "xbar"],
+    ["tg2", "xbar"],
+    ["tg3", "xbar"],
+    ["xbar", "l2_0"],
+    ["xbar", "l2_1"]
+  ]
+}

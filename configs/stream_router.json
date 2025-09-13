@@ -1,0 +1,4 @@
+"connections": [
+  ["producer", "router"],
+  ["router", "consumer"]
+]

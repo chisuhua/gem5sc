@@ -1,0 +1,14 @@
+// configs/arbiter.json
+{
+  "modules": [
+    { "name": "cpu0", "type": "CPUSim" },
+    { "name": "cpu1", "type": "CPUSim" },
+    { "name": "arbiter", "type": "Arbiter" },
+    { "name": "shared_cache", "type": "CacheSim" }
+  ],
+  "connections": [
+    ["cpu0", "arbiter"],
+    ["cpu1", "arbiter"],
+    ["arbiter", "shared_cache"]
+  ]
+}

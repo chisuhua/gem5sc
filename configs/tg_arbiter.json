@@ -1,0 +1,16 @@
+// configs/tg_arbiter.json
+{
+  "modules": [
+    { "name": "tg0", "type": "TrafficGenerator" },
+    { "name": "tg1", "type": "TrafficGenerator" },
+    { "name": "arbiter", "type": "Arbiter" },
+    { "name": "shared_cache", "type": "CacheSim" },
+    { "name": "mem", "type": "MemorySim" }
+  ],
+  "connections": [
+    ["tg0", "arbiter"],
+    ["tg1", "arbiter"],
+    ["arbiter", "shared_cache"],
+    ["shared_cache", "mem"]
+  ]
+}

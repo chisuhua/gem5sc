@@ -1,0 +1,9 @@
+{
+  "modules": [
+    { "name": "producer", "type": "StreamProducer" },
+    { "name": "consumer", "type": "StreamConsumer" }
+  ],
+  "connections": [
+    ["producer", "consumer"]
+  ]
+}

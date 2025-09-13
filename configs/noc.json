@@ -1,0 +1,14 @@
+// configs/noc.json
+{
+  "modules": [
+    { "name": "tg_nw", "type": "TrafficGenerator" },
+    { "name": "router_n", "type": "Router" },
+    { "name": "router_s", "type": "Router" },
+    { "name": "mem", "type": "MemorySim" }
+  ],
+  "connections": [
+    ["tg_nw", "router_n"],
+    ["router_n", "router_s"],
+    ["router_s", "mem"]
+  ]
+}

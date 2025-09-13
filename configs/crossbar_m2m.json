@@ -1,0 +1,16 @@
+// configs/crossbar.json
+{
+  "modules": [
+    { "name": "cpu0", "type": "CPUSim" },
+    { "name": "cpu1", "type": "CPUSim" },
+    { "name": "l2_0", "type": "CacheSim" },
+    { "name": "l2_1", "type": "CacheSim" },
+    { "name": "xbar", "type": "Crossbar" }
+  ],
+  "connections": [
+    ["cpu0", "xbar"],
+    ["cpu1", "xbar"],
+    ["xbar", "l2_0"],
+    ["xbar", "l2_1"]
+  ]
+}

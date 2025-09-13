@@ -1,0 +1,15 @@
+{
+  "modules": [
+    { "name": "cpu", "type": "CPUSim" },
+    { "name": "l1", "type": "CacheSim" },
+    { "name": "l2", "type": "CacheSim" },
+    { "name": "mem0", "type": "MemorySim" },
+    { "name": "mem1", "type": "MemorySim" }
+  ],
+  "connections": [
+    { "src": "cpu", "dst": "l1" },
+    { "src": "l1", "dst": "l2" },
+    { "src": "l2", "dst": "mem0" },
+    { "src": "l2", "dst": "mem1" }
+  ]
+}
