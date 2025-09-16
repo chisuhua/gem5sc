@@ -64,7 +64,7 @@ struct DownstreamPort : public MasterPort {
     std::vector<OutputVC> output_vcs;
 
 
-    explicit DownstreamPort(Owner* o, int i
+    explicit DownstreamPort(Owner* o, int i,
                             const std::vector<size_t>& out_sizes,
                             const std::vector<size_t>& priorities = {}
                             )
@@ -92,14 +92,15 @@ struct DownstreamPort : public MasterPort {
 
         auto& vc = output_vcs[vc_id];
         if (!vc.empty()) {
-        if (vc.enqueue(pkt)) {
-            DPRINTF(VC, "[%s] VC%d not empty, enqueued %p\n", owner->name.c_str(), vc_id, pkt);
-            return true;
-        } else {
-            DPRINTF(VC, "[%s] VC%d full, dropped\n", owner->name.c_str(), vc_id);
-            vc.stats.dropped++;
-            delete pkt;
-            return false;
+            if (vc.enqueue(pkt)) {
+                DPRINTF(VC, "[%s] VC%d not empty, enqueued %p\n", owner->name.c_str(), vc_id, pkt);
+                return true;
+            } else {
+                DPRINTF(VC, "[%s] VC%d full, dropped\n", owner->name.c_str(), vc_id);
+                vc.stats.dropped++;
+                delete pkt;
+                return false;
+            }
         }
         
         if (MasterPort::sendReq(pkt)) {

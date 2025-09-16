@@ -1,0 +1,21 @@
+{
+  "modules": [
+    {
+      "name": "cluster0",
+      "type": "CPUCluster",
+      "plugin": "libcpu_cluster_plugin.so",
+      "config": "configs/cpu_cluster.json"
+    },
+    {
+      "name": "tile0",
+      "type": "NOCTile",
+      "plugin": "libnoc_tile_plugin.so",
+      "config": "configs/noc_tile.json"
+    },
+    { "name": "l2_shared", "type": "CacheSim" }
+  ],
+  "connections": [
+    { "src": "cluster0.l1_to_router", "dst": "tile0.router" },
+    { "src": "tile0.router", "dst": "l2_shared" }
+  ]
+}

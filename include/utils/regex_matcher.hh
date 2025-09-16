@@ -37,7 +37,7 @@ public:
     }
 };
 // 工具函数：从列表中移除被排除的项
-std::vector<std::string> filterExcluded(
+inline std::vector<std::string> filterExcluded(
     const std::vector<std::string>& candidates,
     const json& exclude_list)
 {
@@ -59,3 +59,4 @@ std::vector<std::string> filterExcluded(
     }
     return result;
 }
+#endif

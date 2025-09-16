@@ -6,11 +6,17 @@
 #include "port_manager.hh"
 #include <memory>
 
+struct LayoutInfo {
+    double x = -1, y = -1;
+    bool valid() const { return x >= 0 && y >= 0; }
+};
+
 class SimObject {
 protected:
-    EventQueue* event_queue;
     std::string name;
+    EventQueue* event_queue;
     std::unique_ptr<PortManager> port_manager;
+    LayoutInfo layout;
 
 public:
     SimObject(const std::string& n, EventQueue* eq) : name(n), event_queue(eq) {}
@@ -22,12 +28,19 @@ public:
         event_queue->schedule(new TickEvent(this), 1);
     }
 
+    const std::string& getName() const { return name; }
+    EventQueue* getEventQueue() const { return event_queue; }
+
     PortManager& getPortManager() {
         if (!port_manager) port_manager = std::make_unique<PortManager>();
         return *port_manager;
     }
-
     bool hasPortManager() const { return port_manager != nullptr; }
+
+    void setLayout(double x, double y) {
+        layout.x = x; layout.y = y;
+    }
+    const LayoutInfo& getLayout() const { return layout; }
 
     uint64_t getCurrentCycle() const {
         return event_queue->getCurrentCycle();

@@ -1,0 +1,9 @@
+{
+  "modules": [
+    { "name": "router", "type": "Router" },
+    { "name": "arbiter", "type": "Arbiter" }
+  ],
+  "connections": [
+    { "src": "arbiter", "dst": "router" }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "layout": { "style": "auto" },
+  "modules": [
+    { "name": "fetch", "type": "Arbiter" },
+    { "name": "decode", "type": "Arbiter" },
+    { "name": "execute", "type": "Arbiter" },
+    { "name": "writeback", "type": "Arbiter" }
+  ],
+  "groups": {
+    "pipeline": {
+      "members": ["fetch", "decode", "execute", "writeback"],
+      "placement": "linear"
+    }
+  },
+  "connections": [
+    { "src": "fetch", "dst": "decode" },
+    { "src": "decode", "dst": "execute" },
+    { "src": "execute", "dst": "writeback" }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "system",
+  "type": "SimModule",
+  "plugin": "libsim_module.so",
+  "config": "configs/chip.json"
+}

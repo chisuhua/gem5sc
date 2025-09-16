@@ -1,0 +1,21 @@
+{
+  "layout": { "style": "auto" },
+  "modules": [
+    { "name": "router_0_0", "type": "Router" },
+    { "name": "router_0_1", "type": "Router" },
+    { "name": "router_1_0", "type": "Router" },
+    { "name": "router_1_1", "type": "Router" }
+  ],
+  "groups": {
+    "noc_routers": {
+      "members": ["router_*"],
+      "placement": "grid"
+    }
+  },
+  "connections": [
+    { "src": "router_0_0", "dst": "router_0_1" },
+    { "src": "router_0_1", "dst": "router_1_1" },
+    { "src": "router_1_1", "dst": "router_1_0" },
+    { "src": "router_1_0", "dst": "router_0_0" }
+  ]
+}

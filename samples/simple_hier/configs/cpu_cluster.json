@@ -1,0 +1,13 @@
+{
+  "modules": [
+    { "name": "cpu0", "type": "CPUSim" },
+    { "name": "cpu1", "type": "CPUSim" },
+    { "name": "l1", "type": "CacheSim" },
+    { "name": "router", "type": "Router" }
+  ],
+  "connections": [
+    { "src": "cpu0", "dst": "l1" },
+    { "src": "cpu1", "dst": "l1" },
+    { "src": "l1", "dst": "router" }
+  ]
+}

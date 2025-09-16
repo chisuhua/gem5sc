@@ -3,7 +3,12 @@
 #define MODULE_FACTORY_HH
 
 #include "sim_object.hh"
-#include "config_utils.hh"
+#include "utils/config_utils.hh"
+#include "utils/json_includer.hh"
+#include "utils/wildcard.hh"
+#include "utils/regex_matcher.hh"
+#include "utils/module_group.hh"
+
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include <functional>
@@ -11,12 +16,12 @@
 
 using json = nlohmann::json;
 
+class EventQueue;
 class ModuleFactory {
 private:
     EventQueue* event_queue;
     std::unordered_map<std::string, SimObject*> instances;
 
-    // 类型注册表
     using CreatorFunc = std::function<SimObject*(const std::string&, EventQueue*)>;
     static std::unordered_map<std::string, CreatorFunc>& getTypeRegistry() {
         static std::unordered_map<std::string, CreatorFunc> registry;
@@ -26,19 +31,17 @@ private:
 public:
     explicit ModuleFactory(EventQueue* eq) : event_queue(eq) {}
 
-    // 注册模块类型
     template<typename T>
     static void registerType(const std::string& name) {
         auto& registry = getTypeRegistry();
         if (registry.find(name) != registry.end()) {
-            DPRINTF(MODULE, "[ModuleFactory] Warning: Type '%s' already registered. Overwriting.\n", name.c_str());
+            DPRINTF(MODULE, "[ModuleFactory] Warning: Type '%s' already registered.\n", name.c_str());
         }
         registry[name] = [](const std::string& n, EventQueue* eq) -> SimObject* {
             return new T(n, eq);
         };
     }
 
-    // 注销单个类型
     static bool unregisterType(const std::string& name) {
         auto& registry = getTypeRegistry();
         auto it = registry.find(name);
@@ -51,14 +54,11 @@ public:
         return false;
     }
 
-    // 清空所有注册类型（用于测试重置）
     static void clearAllTypes() {
-        auto& registry = getTypeRegistry();
+        getTypeRegistry().clear();
         DPRINTF(MODULE, "[ModuleFactory] Cleared %zu registered types.\n", registry.size());
-        registry.clear();
     }
 
-    // 获取当前注册的类型列表（调试用）
     static std::vector<std::string> getRegisteredTypes() {
         std::vector<std::string> names;
         for (const auto& kv : getTypeRegistry()) {
@@ -67,7 +67,6 @@ public:
         return names;
     }
 
-    // 创建所有模块实例
     void instantiateAll(const json& config);
     void startAllTicks();
 
@@ -76,7 +75,10 @@ public:
         return it != instances.end() ? it->second : nullptr;
     }
 
-    // 调试：打印已注册类型
+    const std::unordered_map<std::string, SimObject*>& getAllInstances() const {
+        return instances;
+    }
+
     static void listRegisteredTypes() {
         printf("[ModuleFactory] Registered types:\n");
         for (const auto& kv : getTypeRegistry()) {
@@ -85,43 +87,93 @@ public:
     }
 };
 
-// module_factory.cc 或继续放在 .hh 中
 void ModuleFactory::instantiateAll(const json& config) {
-    // 1. 分析连接拓扑
-    std::unordered_map<std::string, std::vector<std::string>> in_edges;
-    std::unordered_map<std::string, std::vector<std::string>> out_edges;
+    json final_config = JsonIncluder::loadAndIncludeFromJson(config);
 
-    for (auto& conn : config["connections"]) {
-        if (!conn.contains("src") || !conn.contains("dst")) {
-            printf("[ERROR] Invalid connection: missing 'src' or 'dst'\n");
-            continue;
-        }
-        std::string src = conn["src"];
-        std::string dst = conn["dst"];
-        in_edges[dst].push_back(src);
-        out_edges[src].push_back(dst);
-    }
 
-    // 2. 创建所有模块（使用注册表）
-    for (auto& mod : config["modules"]) {
-        if (!mod.contains("name") || !mod.contains("type")) {
-            printf("[ERROR] Module missing 'name' or 'type'\n");
-            continue;
-        }
+    // 创建所有模块
+    for (auto& mod : final_config["modules"]) {
+        if (!mod.contains("name") || !mod.contains("type")) continue;
         std::string name = mod["name"];
         std::string type = mod["type"];
 
         auto& registry = ModuleFactory::getTypeRegistry();
-        auto it = registry.find(type);
-        if (it != registry.end()) {
+
+        if (mod.contains("plugin")) {
+            std::string plugin_path = mod["plugin"];
+            if (!DynamicLoader::loadPlugin(plugin_path)) {
+                printf("[ERROR] Failed to load plugin for %s\n", name.c_str());
+                continue;
+            }
+
+            auto it = registry.find(type);
+            if (it == registry.end()) {
+                printf("[ERROR] Type '%s' not registered by plugin\n", type.c_str());
+                continue;
+            }
+
             instances[name] = it->second(name, event_queue);
-            DPRINTF(MODULE, "[ModuleFactory] Created %s as %s\n", name.c_str(), type.c_str());
-        } else {
-            printf("[ERROR] Unknown or unregistered module type: %s\n", type.c_str());
+            if (mod.contains("config")) {
+                if (auto* sim_mod = dynamic_cast<SimModule*>(instances[name])) {
+                    std::string config_file = mod["config"];
+                    std::ifstream f(config_file);
+                    if (f.is_open()) {
+                        json internal_cfg = json::parse(f);
+                        sim_mod->configure(internal_cfg);
+                    } else {
+                        printf("[ERROR] Cannot open config: %s\n", config_file.c_str());
+                    }
+                }
+            }
+
+            if (mod.contains("layout")) {
+                auto& l = mod["layout"];
+                double x = l.value("x", -1);
+                double y = l.value("y", -1);
+                if (x >= 0 && y >= 0) {
+                    instances[name]->setLayout(x, y);
+                }
+            }
+        }
+        // 普通模块
+        else {
+            auto it = registry.find(type);
+            if (it != registry.end()) {
+                instances[name] = it->second(name, event_queue);
+            } else {
+                printf("[ERROR] Unknown or unregistered module type: %s\n", type.c_str());
+            }
+        }
+
+    }
+
+    // 2. 解析 groups
+    if (final_config.contains("groups")) {
+        for (auto& [group_name, members] : final_config["groups"].items()) {
+            std::vector<std::string> member_list;
+            for (auto& m : members) {
+                member_list.push_back(m.get<std::string>());
+            }
+            ModuleGroup::define(group_name, member_list);
         }
     }
 
-    // 3. 动态创建端口（保持不变）
+    // 动态创建端口
+    std::unordered_map<std::string, std::vector<std::string>> in_edges;
+    std::unordered_map<std::string, std::vector<std::string>> out_edges;
+
+    for (auto& conn : final_config["connections"]) {
+        if (!conn.contains("src") || !conn.contains("dst")) continue;
+        std::string src = conn["src"];
+        std::string dst = conn["dst"];
+
+        if (!RegexMatcher::isRegexPattern(src) && !ModuleGroup::isGroupReference(src) &&
+            !RegexMatcher::isRegexPattern(dst) && !ModuleGroup::isGroupReference(dst)) {
+            in_edges[dst].push_back(src);
+            out_edges[src].push_back(dst);
+        }
+    }
+
     for (auto& [name, obj] : instances) {
         if (!obj->hasPortManager()) continue;
 
@@ -134,7 +186,7 @@ void ModuleFactory::instantiateAll(const json& config) {
         std::vector<size_t> default_priorities = {};
 
         for (size_t i = 0; i < in_degree; ++i) {
-            json conn_cfg = getInputConnectionConfig(config, name, i);
+            json conn_cfg = getInputConnectionConfig(final_config, name, i);
             std::string label = "from_" + in_edges[name][i];
 
             pm.addUpstreamPort(
@@ -145,7 +197,7 @@ void ModuleFactory::instantiateAll(const json& config) {
             );
         }
         for (size_t i = 0; i < out_degree; ++i) {
-            json conn_cfg = getOutputConnectionConfig(config, name, i);
+            json conn_cfg = getOutputConnectionConfig(final_config, name, i);
             std::string label = "to_" + out_edges[name][i];
 
             pm.addDownstreamPort(
@@ -157,11 +209,11 @@ void ModuleFactory::instantiateAll(const json& config) {
         }
     }
 
-    // 4. 建立连接并注入延迟（保持不变）
+    // 处理 wildcard/group 连接
     std::unordered_map<std::string, size_t> src_indices;
     std::unordered_map<std::string, size_t> dst_indices;
 
-    for (auto& conn : config["connections"]) {
+    for (auto& conn : final_config["connections"]) {
         if (!conn.contains("src") || !conn.contains("dst")) continue;
 
         std::string src_spec = conn["src"];
@@ -171,10 +223,8 @@ void ModuleFactory::instantiateAll(const json& config) {
 
         std::vector<std::string> src_names, dst_names;
 
-        // 解析 src
         if (ModuleGroup::isGroupReference(src_spec)) {
-            std::string group_name = ModuleGroup::extractGroupName(src_spec);
-            src_names = ModuleGroup::getMembers(group_name);
+            src_names = ModuleGroup::resolve(src_spec);
         } else {
             for (auto& [name, obj] : instances) {
                 if (RegexMatcher::match(src_spec, name)) {
@@ -183,10 +233,8 @@ void ModuleFactory::instantiateAll(const json& config) {
             }
         }
 
-        // 解析 dst
         if (ModuleGroup::isGroupReference(dst_spec)) {
-            std::string group_name = ModuleGroup::extractGroupName(dst_spec);
-            dst_names = ModuleGroup::getMembers(group_name);
+            dst_names = ModuleGroup::resolve(dst_spec);
         } else {
             for (auto& [name, obj] : instances) {
                 if (RegexMatcher::match(dst_spec, name)) {
@@ -195,11 +243,9 @@ void ModuleFactory::instantiateAll(const json& config) {
             }
         }
 
-        // 应用 exclude
         src_names = filterExcluded(src_names, exclude_list);
         dst_names = filterExcluded(dst_names, exclude_list);
 
-        // 全连接
         for (const std::string& src_name : src_names) {
             auto src_obj = instances.find(src_name);
             if (src_obj == instances.end()) continue;
@@ -216,11 +262,12 @@ void ModuleFactory::instantiateAll(const json& config) {
                 SlavePort* dst_port = nullptr;
 
                 if (!src_pm.getDownstreamPorts().empty()) {
-                    src_port = src_pm.getDownstreamPorts()[src_idx++ % src_pm.getDownstreamPorts().size()];
+                    src_port = src_pm.getDownstreamPorts()[src_idx % src_pm.getDownstreamPorts().size()];
                     src_idx++;
                 }
+
                 if (!dst_pm.getUpstreamPorts().empty()) {
-                    dst_port = dst_pm.getUpstreamPorts()[dst_idx++ % dst_pm.getUpstreamPorts().size()];
+                    dst_port = dst_pm.getUpstreamPorts()[dst_idx % dst_pm.getUpstreamPorts().size()];
                     dst_idx++;
                 }
 
@@ -228,7 +275,7 @@ void ModuleFactory::instantiateAll(const json& config) {
                     new PortPair(src_port, dst_port);
                     src_port->setDelay(latency);
                     DPRINTF(CONN, "[CONN] Connected %s -> %s (latency=%d)\n",
-                        src_names[i].c_str(), dst_names[j].c_str(), latency);
+                            src_name.c_str(), dst_name.c_str(), latency);
                 }
             }
         }

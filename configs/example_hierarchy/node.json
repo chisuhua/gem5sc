@@ -1,0 +1,21 @@
+{
+  "modules": [
+    {
+      "name": "core_cluster",
+      "type": "SimModule",
+      "plugin": "libsim_module.so",
+      "config": "configs/core_cluster.json"
+    },
+    {
+      "name": "cache_cluster",
+      "type": "SimModule",
+      "plugin": "libsim_module.so",
+      "config": "configs/cache_cluster.json"
+    },
+    { "name": "noc_router", "type": "Router" }
+  ],
+  "connections": [
+    { "src": "core_cluster.router", "dst": "noc_router" },
+    { "src": "cache_cluster.l2", "dst": "noc_router" }
+  ]
+}

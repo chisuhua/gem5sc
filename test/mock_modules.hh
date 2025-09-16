@@ -5,6 +5,16 @@
 #include "../include/sim_object.hh"
 #include "../include/packet.hh"
 
+
+class MockSim : public SimObject {
+public:
+    explicit MockSim(const std::string& n, EventQueue* eq) : SimObject(n, eq) {}
+
+    bool handleUpstreamRequest(Packet* pkt, int src_id) { return true; }
+    bool handleDownstreamResponse(Packet* pkt, int src_id) { return true; }
+    void tick() override {}
+};
+
 // 简化版 Producer，用于发送请求
 class MockProducer : public SimObject {
 public:

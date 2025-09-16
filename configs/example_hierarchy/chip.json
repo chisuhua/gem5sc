@@ -1,0 +1,21 @@
+{
+  "modules": [
+    {
+      "name": "node0",
+      "type": "SimModule",
+      "plugin": "libsim_module.so",
+      "config": "configs/node.json"
+    },
+    {
+      "name": "node1",
+      "type": "SimModule",
+      "plugin": "libsim_module.so",
+      "config": "configs/node.json"
+    },
+    { "name": "l2_shared", "type": "CacheSim" }
+  ],
+  "connections": [
+    { "src": "node0.noc_router", "dst": "l2_shared" },
+    { "src": "node1.noc_router", "dst": "l2_shared" }
+  ]
+}
