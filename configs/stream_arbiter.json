@@ -1,6 +1,0 @@
-"modules": [
-  { "name": "prod_a", "type": "StreamProducer" },
-  { "name": "prod_b", "type": "StreamProducer" },
-  { "name": "arbiter", "type": "Arbiter" },
-  { "name": "consumer", "type": "StreamConsumer" }
-]

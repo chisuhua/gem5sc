@@ -1,5 +1,5 @@
 # 1. 创建构建目录
-mkdir build && cd build
+mkdir -p build && cd build
 
 # 2. 生成 Makefile
 cmake ..

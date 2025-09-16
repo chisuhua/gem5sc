@@ -12,6 +12,7 @@ class SimplePort {
 protected:
     PortPair* pair = nullptr;
     int my_side;
+    int delay_cycles = 0; // wires delay
 
 public:
     virtual void bind(PortPair* p, int side) {
@@ -24,6 +25,8 @@ public:
 
     // 接收数据包（纯虚，由子类实现）
     virtual bool recv(Packet* pkt) = 0;
+
+    void setDelay(int d) { delay_cycles = d; }
 
     virtual ~SimplePort() = default;
 };

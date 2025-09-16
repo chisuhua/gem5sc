@@ -4,6 +4,7 @@
 #include "event_queue.hh"
 #include "module_factory.hh"
 #include "config_loader.hh"  // 包含 loadConfig
+#include "modules.hh"
 
 extern "C" int sc_main(int argc, char* argv[]) {
     // 空函数，只是为了满足链接器需求
@@ -17,14 +18,20 @@ int main(int argc, char* argv[]) {
     }
 
     EventQueue eq;
-    ModuleFactory factory(&eq);
+
+    REGISTER_ALL
+    ModuleFactory::listRegisteredTypes();
+
 
     // 加载配置文件
     json config = loadConfig(argv[1]);
 
     // 构建系统
+    ModuleFactory factory(&eq);
     factory.instantiateAll(config);
     factory.startAllTicks();
+
+    TopologyDumper::dumpToDot(factory, "topology.dot");
 
     // 运行仿真
     eq.run(10000);

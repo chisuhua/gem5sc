@@ -18,6 +18,7 @@ endif()
 # 如果你想控制 build 类型
 set_target_properties(systemc PROPERTIES CXX_STANDARD 17)
 
+add_subdirectory(test)
 # -----------------------------
 # 包含目录
 # -----------------------------

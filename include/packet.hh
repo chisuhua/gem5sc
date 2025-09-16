@@ -34,6 +34,8 @@ public:
     uint8_t priority = 0;
     uint64_t flow_id = 0;
 
+    uint8_t vc_id = 0;
+
     Packet(tlm::tlm_generic_payload* p, uint64_t cycle, PacketType t)
         : payload(p), src_cycle(cycle), type(t) {}
 

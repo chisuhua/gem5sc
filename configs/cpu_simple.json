@@ -1,11 +1,23 @@
 {
   "modules": [
-    { "name": "cpu", "type": "CPUSim" },
-    { "name": "cache", "type": "CacheSim" },
+    { "name": "cpu0", "type": "CPUSim" },
+    { "name": "l1", "type": "CacheSim" },
     { "name": "mem", "type": "MemorySim" }
   ],
   "connections": [
-    { "src": "cpu", "dst": "cache" },
-    { "src": "cache", "dst": "mem" }
+    {
+      "src": "cpu0",
+      "dst": "l1",
+      "input_buffer_sizes": [8],
+      "output_buffer_sizes": [4],
+      "latency": 2
+    },
+    {
+      "src": "l1",
+      "dst": "mem",
+      "input_buffer_sizes": [4],
+      "output_buffer_sizes": [8],
+      "latency": 100
+    }
   ]
 }
