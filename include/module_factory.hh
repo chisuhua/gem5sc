@@ -164,38 +164,53 @@ void ModuleFactory::instantiateAll(const json& config) {
     for (auto& conn : config["connections"]) {
         if (!conn.contains("src") || !conn.contains("dst")) continue;
 
-        std::string src = conn["src"];
-        std::string dst = conn["dst"];
+        std::string src_spec = conn["src"];
+        std::string dst_spec = conn["dst"];
         int latency = conn.value("latency", 0);
+        json exclude_list = conn.value("exclude", json::array());
 
-        // 获取所有匹配的 src 模块
-        std::vector<SimObject*> src_objs;
-        std::vector<std::string> src_names;
-        for (auto& [name, obj] : instances) {
-            if (Wildcard::match(src_pattern, name)) {
-                src_objs.push_back(obj);
-                src_names.push_back(name);
+        std::vector<std::string> src_names, dst_names;
+
+        // 解析 src
+        if (ModuleGroup::isGroupReference(src_spec)) {
+            std::string group_name = ModuleGroup::extractGroupName(src_spec);
+            src_names = ModuleGroup::getMembers(group_name);
+        } else {
+            for (auto& [name, obj] : instances) {
+                if (RegexMatcher::match(src_spec, name)) {
+                    src_names.push_back(name);
+                }
             }
         }
 
-        // 获取所有匹配的 dst 模块
-        std::vector<SimObject*> dst_objs;
-        std::vector<std::string> dst_names;
-        for (auto& [name, obj] : instances) {
-            if (Wildcard::match(dst_pattern, name)) {
-                dst_objs.push_back(obj);
-                dst_names.push_back(name);
+        // 解析 dst
+        if (ModuleGroup::isGroupReference(dst_spec)) {
+            std::string group_name = ModuleGroup::extractGroupName(dst_spec);
+            dst_names = ModuleGroup::getMembers(group_name);
+        } else {
+            for (auto& [name, obj] : instances) {
+                if (RegexMatcher::match(dst_spec, name)) {
+                    dst_names.push_back(name);
+                }
             }
         }
 
-        // 全连接：每个 src 连接到每个 dst
-        for (size_t i = 0; i < src_objs.size(); ++i) {
-            auto& src_pm = src_objs[i]->getPortManager();
-            size_t& src_idx = src_indices[src_names[i]];
+        // 应用 exclude
+        src_names = filterExcluded(src_names, exclude_list);
+        dst_names = filterExcluded(dst_names, exclude_list);
 
-            for (size_t j = 0; j < dst_objs.size(); ++j) {
-                auto& dst_pm = dst_objs[j]->getPortManager();
-                size_t& dst_idx = dst_indices[dst_names[j]];
+        // 全连接
+        for (const std::string& src_name : src_names) {
+            auto src_obj = instances.find(src_name);
+            if (src_obj == instances.end()) continue;
+            auto& src_pm = src_obj->second->getPortManager();
+            size_t& src_idx = src_indices[src_name];
+
+            for (const std::string& dst_name : dst_names) {
+                auto dst_obj = instances.find(dst_name);
+                if (dst_obj == instances.end()) continue;
+                auto& dst_pm = dst_obj->second->getPortManager();
+                size_t& dst_idx = dst_indices[dst_name];
 
                 MasterPort* src_port = nullptr;
                 SlavePort* dst_port = nullptr;

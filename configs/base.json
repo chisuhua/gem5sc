@@ -1,0 +1,14 @@
+{
+  "include": "common/modules.json",
+  "groups": {
+    "cpus": ["cpu0", "cpu1"],
+    "memories": ["mem0"]
+  },
+  "connections": [
+    {
+      "src": "group:cpus",
+      "dst": "l1",
+      "latency": 2
+    }
+  ]
+}

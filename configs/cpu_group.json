@@ -1,0 +1,34 @@
+{
+  "modules": [
+    { "name": "cpu0", "type": "CPUSim" },
+    { "name": "cpu1", "type": "CPUSim" },
+    { "name": "cpu2", "type": "CPUSim" },
+    { "name": "gpu0", "type": "TrafficGenerator" },
+    { "name": "l1_shared", "type": "CacheSim" },
+    { "name": "mem", "type": "MemorySim" }
+  ],
+
+  "groups": {
+    "cpus": ["cpu0", "cpu1", "cpu2"],
+    "gpus": ["gpu0"]
+  },
+
+  "connections": [
+    {
+      "src": "regex:cpu[0-1]",
+      "dst": "l1_shared",
+      "latency": 2
+    },
+    {
+      "src": "group:cpus",
+      "dst": "mem",
+      "exclude": ["cpu2"],
+      "latency": 50
+    },
+    {
+      "src": "gpu0",
+      "dst": "mem",
+      "latency": 40
+    }
+  ]
+}

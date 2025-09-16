@@ -3,7 +3,7 @@
 #include "sim_core.hh"
 #include "event_queue.hh"
 #include "module_factory.hh"
-#include "config_loader.hh"  // 包含 loadConfig
+#include "utils/json_includer.hh"  // 包含 loadConfig
 #include "modules.hh"
 
 extern "C" int sc_main(int argc, char* argv[]) {
@@ -24,7 +24,8 @@ int main(int argc, char* argv[]) {
 
 
     // 加载配置文件
-    json config = loadConfig(argv[1]);
+    //json config = loadConfig(argv[1]);
+    json config = JsonIncluder::loadAndInclude("configs/base.json");
 
     // 构建系统
     ModuleFactory factory(&eq);
