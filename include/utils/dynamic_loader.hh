@@ -4,6 +4,7 @@
 
 #include <dlfcn.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 class DynamicLoader {
@@ -63,3 +64,5 @@ public:
 
 std::unordered_map<std::string, void*> DynamicLoader::loaded_handles;
 std::unordered_set<std::string> DynamicLoader::registered_plugins;
+
+#endif

@@ -3,11 +3,13 @@
 #define MODULE_FACTORY_HH
 
 #include "sim_object.hh"
+#include "sim_module.hh"
 #include "utils/config_utils.hh"
 #include "utils/json_includer.hh"
 #include "utils/wildcard.hh"
 #include "utils/regex_matcher.hh"
 #include "utils/module_group.hh"
+#include "utils/dynamic_loader.hh"
 
 #include <unordered_map>
 #include <nlohmann/json.hpp>
@@ -56,7 +58,7 @@ public:
 
     static void clearAllTypes() {
         getTypeRegistry().clear();
-        DPRINTF(MODULE, "[ModuleFactory] Cleared %zu registered types.\n", registry.size());
+        DPRINTF(MODULE, "[ModuleFactory] Cleared %zu registered types.\n", getTypeRegistry().size());
     }
 
     static std::vector<std::string> getRegisteredTypes() {
@@ -88,7 +90,7 @@ public:
 };
 
 void ModuleFactory::instantiateAll(const json& config) {
-    json final_config = JsonIncluder::loadAndIncludeFromJson(config);
+    json final_config = JsonIncluder::loadAndInclude(config);
 
 
     // 创建所有模块

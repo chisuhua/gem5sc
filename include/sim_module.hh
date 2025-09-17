@@ -1,5 +1,9 @@
-// include/sim_module.hh
-class SimModule : public SimObject {
+// include/sim_object.hh
+#ifndef SIM_MODULE_HH
+#define SIM_MODULE_HH
+
+template<typename Module>
+class SimModule : public Module {
 private:
     std::unique_ptr<ModuleFactory> internal_factory;
     json config;
@@ -35,3 +39,5 @@ public:
         return internal_factory->getInstance(name);
     }
 };
+
+#endif
