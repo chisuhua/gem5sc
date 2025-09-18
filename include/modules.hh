@@ -5,12 +5,16 @@
 #include "modules/router.hh"
 #include "modules/arbiter.hh"
 #include "modules/traffic_gen.hh"
+#include "modules/cpu_cluster.hh"
 
-#define REGISTER_ALL \
-    ModuleFactory::registerType<CPUSim>("CPUSim");
-    ModuleFactory::registerType<CacheSim>("CacheSim");
-    ModuleFactory::registerType<MemorySim>("MemorySim");
-    ModuleFactory::registerType<MemorySim>("Crossbar");
-    ModuleFactory::registerType<MemorySim>("Router");
-    ModuleFactory::registerType<MemorySim>("Arbiter");
-    ModuleFactory::registerType<TrafficGenerator>("TrafficGenerator");
+#define REGISTER_OBJECT \
+    ModuleFactory::registerObject<CPUSim>("CPUSim"); \
+    ModuleFactory::registerObject<CacheSim>("CacheSim"); \
+    ModuleFactory::registerObject<MemorySim>("MemorySim"); \
+    ModuleFactory::registerObject<MemorySim>("Crossbar"); \
+    ModuleFactory::registerObject<MemorySim>("Router"); \
+    ModuleFactory::registerObject<MemorySim>("Arbiter"); \
+    ModuleFactory::registerObject<TrafficGenerator>("TrafficGenerator");
+
+#define REGISTER_MODULE \
+    ModuleFactory::registerModule<CpuCluster>("CpuCluster");

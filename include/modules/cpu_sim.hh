@@ -17,7 +17,8 @@ private:
 public:
     CPUSim(const std::string& n, EventQueue* eq) : SimObject(n, eq) {}
 
-    bool handleDownstreamResponse(Packet* pkt, int src_id) {
+    // 更新方法签名以匹配父类
+    bool handleDownstreamResponse(Packet* pkt, int src_id, const std::string& src_label) override {
         if (pkt->isResponse()) {
             uint64_t addr = pkt->original_req->payload->get_address();
             DPRINTF(CPU, "Received response for 0x%" PRIx64 "\n", addr);
@@ -25,6 +26,7 @@ public:
             delete pkt;
             return true;
         }
+        delete pkt;
         return false;
     }
 
@@ -41,6 +43,7 @@ public:
 
             Packet* pkt = new Packet(trans, event_queue->getCurrentCycle(), PKT_REQ_READ);
             MasterPort* port = pm.getDownstreamPorts()[next_addr % pm.getDownstreamPorts().size()];
+            pkt->vc_id = 0; // 设置VC ID
 
             if (port->sendReq(pkt)) {
                 inflight_reqs[next_addr] = pkt;

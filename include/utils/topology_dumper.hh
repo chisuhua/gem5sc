@@ -164,8 +164,8 @@ public:
             for (auto* p : factory.getInstance(src)->getPortManager().getDownstreamPorts()) {
                 if (auto* mp = dynamic_cast<MasterPort*>(p)) {
                     if (mp->pair && (
-                        (mp->my_side == 0 && mp->pair->side_b->owner->getName() == dst) ||
-                        (mp->my_side == 1 && mp->pair->side_a->owner->getName() == dst))) {
+                        (mp->my_side == 0 && mp->pair->side_b->getOwner()->getName() == dst) ||
+                        (mp->my_side == 1 && mp->pair->side_a->getOwner()->getName() == dst))) {
                         port = mp;
                         break;
                     }

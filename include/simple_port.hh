@@ -6,6 +6,8 @@
 #include <string>
 
 class PortPair;
+class TopologyDumper;
+class SimObject;
 
 // 基础端口类：支持 send/recv
 class SimplePort {
@@ -25,10 +27,14 @@ public:
 
     // 接收数据包（纯虚，由子类实现）
     virtual bool recv(Packet* pkt) = 0;
+    virtual SimObject* getOwner() = 0;
 
     void setDelay(int d) { delay_cycles = d; }
+    int getDelay() {return delay_cycles; }
 
     virtual ~SimplePort() = default;
+
+friend class TopologyDumper;
 };
 
 // 双向连接对
@@ -43,7 +49,7 @@ public:
     }
 };
 
-bool SimplePort::send(Packet* pkt) {
+inline bool SimplePort::send(Packet* pkt) {
     if (pair) {
         SimplePort* other = (my_side == 0) ? pair->side_b : pair->side_a;
         return other->recv(pkt);

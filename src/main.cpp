@@ -4,6 +4,7 @@
 #include "event_queue.hh"
 #include "module_factory.hh"
 #include "utils/json_includer.hh"  // 包含 loadConfig
+#include "utils/topology_dumper.hh"  // 包含 loadConfig
 #include "modules.hh"
 
 extern "C" int sc_main(int argc, char* argv[]) {
@@ -19,7 +20,8 @@ int main(int argc, char* argv[]) {
 
     EventQueue eq;
 
-    REGISTER_ALL
+    REGISTER_OBJECT
+    REGISTER_MODULE
     ModuleFactory::listRegisteredTypes();
 
 
@@ -32,7 +34,7 @@ int main(int argc, char* argv[]) {
     factory.instantiateAll(config);
     factory.startAllTicks();
 
-    TopologyDumper::dumpToDot(factory, "topology.dot");
+    TopologyDumper::dumpToDot(factory, config, "topology.dot");
 
     // 运行仿真
     eq.run(10000);

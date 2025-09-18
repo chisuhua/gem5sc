@@ -48,7 +48,7 @@ public:
     virtual bool recvResp(Packet* pkt) = 0;
 
     // 发起请求
-    bool sendReq(Packet* pkt) {
+    virtual bool sendReq(Packet* pkt) {
         return send(pkt);
     }
 

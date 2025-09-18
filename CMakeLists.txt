@@ -1,6 +1,6 @@
 # CMakeLists.txt - 主项目
 cmake_minimum_required(VERSION 3.16)  # SystemC 3.0.1 需要较新版本
-project(gem5_mini CXX)
+project(gemsc CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,23 +18,23 @@ endif()
 # 如果你想控制 build 类型
 set_target_properties(systemc PROPERTIES CXX_STANDARD 17)
 
-add_subdirectory(samples)
-add_subdirectory(test)
-# -----------------------------
-# 包含目录
-# -----------------------------
 include_directories(
     include
     systemc-3.0.1/src
     external/json
 )
 
-set(SOURCES src/main.cpp)
+file(GLOB_RECURSE SOURCE_FILES 
+    "src/*/*.cc" 
+    "src/main.cpp" 
+)
 
-add_executable(sim ${SOURCES})
+add_executable(sim ${SOURCE_FILES})
 
 # 链接 systemc 库（由 add_subdirectory 提供）
 target_link_libraries(sim systemc)
+
+add_subdirectory(samples/simple1)
 
 # 可选：设置输出目录
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build)
